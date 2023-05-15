@@ -1,3 +1,6 @@
+mod atom;
+use atom::*;
+
 #[derive(Debug)]
 pub struct World {
     pub dimensions: (u32, u32, u32),
@@ -40,6 +43,10 @@ impl Voxel {
             "Voxel: {}, {}, {}",
             self.position.0, self.position.1, self.position.2
         );
+        for i in self.composition.molecules[0].as_drawing_string() {
+            print!("{}", i);
+        }
+        print!("\n");
     }
 }
 
@@ -50,11 +57,11 @@ pub struct Composition {
 }
 
 impl Composition {
-    // air returns 100% hydrogen, should be changed
+    //TODO: air returns 100% hydrogen, should be changed
     pub fn air() -> Composition {
         Composition {
             molecules: vec![Molecule {
-                atoms: vec![Atom::H, Atom::H],
+                atoms: vec![Atom::new(1, 1), Atom::new(1, 1)],
                 connections: vec![vec![1]],
             }],
             concentration: vec![255],
@@ -77,19 +84,62 @@ then the molecule is
 #[derive(Debug)]
 pub struct Molecule {
     atoms: Vec<Atom>,
-    connections: Vec<Vec<u8>>,
+    connections: Vec<Vec<usize>>,
 }
 
 impl Molecule {
-/*    pub fn as_drawing_string(&self) -> String {
+    pub fn n_main_atoms(&self) -> usize {
+        // returns the number of main atoms
+        let mut secondary_atoms = 0;
+        for i in &self.connections {
+            secondary_atoms += i.len();
+        }
+        return self.atoms.len() - secondary_atoms;
+    }
+    pub fn as_drawing_string(&self) -> Vec<String> {
         // formats the molecule as a drawing in the String format for debug purposes
-    }*/
-}
+        // formats are the different drawings for different configurations TODO: there are more possible configurations
 
-//TODO: Add all atoms
-#[derive(Debug)]
-pub enum Atom {
-    C,
-    N,
-    H,
+        /*
+        TODO:
+        This system needs to be changed to a system using the format!() macro.
+        This will work as the following:
+        - select the script to run with a match statement according to amount of secondary atoms and the position in the molecule
+        - each script contains a format!() macro with a hardcoded string that fits the primary atom
+        */
+        let mut result: Vec<String> = vec![];
+        let mut index = 0;
+        for connection in self.connections.iter() {
+            //TODO: optimisation possible by assigning the short names to local variables first
+            match connection.len() {
+                0 => {
+                    if index != self.connections.len() - 1 {
+                        result.append(&mut vec![
+                            format!("{} -  ", self.atoms[index].get_short()).to_string()
+                        ]);
+                    }
+                    //TODO: add first and last atom exceptions
+                }
+                1 => {
+                    if index != 0 && index != self.connections.len() - 1  {
+                        result.append(&mut vec![
+                            format!(r"
+                                {}   
+                                |   
+                                {} - ", self.atoms[index + connection[0]].get_short(), self.atoms[index].get_short()).to_string()
+                        ]);
+                    } else if index == 0 {
+                        //BUG: if the first atom is also the last line is still present
+                        result.append(&mut vec![
+                            format!("{} - {} - ", self.atoms[index + connection [0]].get_short(), self.atoms[index].get_short()).to_string()
+                        ]);
+                    }
+                    //TODO: last atom exception
+                }
+                _ => return vec![String::from("test2")],
+            }
+            index += 1;
+        }
+        return result;
+    }
 }

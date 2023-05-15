@@ -10,7 +10,7 @@ mod world;
 use world::World;
 
 fn main() {
-    let mut world = World::new(10, 10, 10);
+    let world = World::new(10, 10, 10);
     for voxel in world.voxels {
         voxel.vxprint();
     }
