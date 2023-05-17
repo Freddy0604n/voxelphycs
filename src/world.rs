@@ -112,6 +112,7 @@ impl Molecule {
         for connection in self.connections.iter() {
             //TODO: optimisation possible by assigning the short names to local variables first
             match connection.len() {
+                //TODO: add the option 2
                 0 => {
                     if index != self.connections.len() - 1 {
                         result.append(&mut vec![
@@ -121,18 +122,25 @@ impl Molecule {
                     //TODO: add first and last atom exceptions
                 }
                 1 => {
-                    if index != 0 && index != self.connections.len() - 1  {
-                        result.append(&mut vec![
-                            format!(r"
+                    // this checks whether the secondary atom should be added to the side
+                    if index != 0 && index != self.connections.len() - 1 {
+                        result.append(&mut vec![format!(
+                            r"
                                 {}   
                                 |   
-                                {} - ", self.atoms[index + connection[0]].get_short(), self.atoms[index].get_short()).to_string()
-                        ]);
+                                {} - ",
+                            self.atoms[index + connection[0]].get_short(),
+                            self.atoms[index].get_short()
+                        )
+                        .to_string()]);
                     } else if index == 0 {
                         //BUG: if the first atom is also the last line is still present
-                        result.append(&mut vec![
-                            format!("{} - {} - ", self.atoms[index + connection [0]].get_short(), self.atoms[index].get_short()).to_string()
-                        ]);
+                        result.append(&mut vec![format!(
+                            "{} - {} - ",
+                            self.atoms[index + connection[0]].get_short(),
+                            self.atoms[index].get_short()
+                        )
+                        .to_string()]);
                     }
                     //TODO: last atom exception
                 }
