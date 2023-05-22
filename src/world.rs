@@ -16,7 +16,7 @@ impl World {
                 for k in 0..z {
                     voxel_vec.push(Voxel {
                         position: (i, j, k),
-                        composition: Composition::air(),
+                        composition: Composition::propane(),
                     });
                 }
             }
@@ -67,6 +67,27 @@ impl Composition {
             concentration: vec![255],
         }
     }
+    pub fn propane() -> Composition {
+        Composition {
+            molecules: vec![Molecule {
+                atoms: vec![
+                    Atom::new(6, 6), // C
+                    Atom::new(1, 1), // H
+                    Atom::new(1, 1), // H
+                    Atom::new(1, 1), // H
+                    Atom::new(6, 6), // C
+                    Atom::new(1, 1), // H
+                    Atom::new(1, 1), // H
+                    Atom::new(6, 6), // C
+                    Atom::new(1, 1), // H
+                    Atom::new(1, 1), // H
+                    Atom::new(1, 1), // H
+                ],
+                connections: vec![vec![1, 2, 3], vec![1, 2], vec![1, 2, 3]],
+            }],
+            concentration: vec![255],
+        }
+    }
 }
 
 /*Every atom gets its own connection vector. This vector contains the connections between the following atoms.
@@ -98,28 +119,25 @@ impl Molecule {
     }
     pub fn as_drawing_string(&self) -> Vec<String> {
         // formats the molecule as a drawing in the String format for debug purposes
-        // formats are the different drawings for different configurations TODO: there are more possible configurations
-
+        // TODO: Add more configurations than three single connections
         /*
-        TODO:
-        This system needs to be changed to a system using the format!() macro.
-        This will work as the following:
+        This works following these steps:
         - select the script to run with a match statement according to amount of secondary atoms and the position in the molecule
         - each script contains a format!() macro with a hardcoded string that fits the primary atom
         */
+        // BUG: This script generates data that is not easily printable. The lines should be added to each other.
         let mut result: Vec<String> = vec![];
         let mut index = 0;
         for connection in self.connections.iter() {
-            //TODO: optimisation possible by assigning the short names to local variables first
+            let main_atom = self.atoms[index].get_name(true).to_string();
             match connection.len() {
-                //TODO: add the option 2
+                //TODO: add the option 2 & 3
                 0 => {
-                    if index != self.connections.len() - 1 {
-                        result.append(&mut vec![
-                            format!("{} -  ", self.atoms[index].get_short()).to_string()
-                        ]);
+                    if index == self.connections.len() - 1 {
+                        result.append(&mut vec![format!("{}    ", main_atom)]);
+                    } else {
+                        result.append(&mut vec![format!("{} -  ", main_atom)]);
                     }
-                    //TODO: add first and last atom exceptions
                 }
                 1 => {
                     // this checks whether the secondary atom should be added to the side
@@ -129,20 +147,57 @@ impl Molecule {
                                 {}   
                                 |   
                                 {} - ",
-                            self.atoms[index + connection[0]].get_short(),
-                            self.atoms[index].get_short()
+                            self.atoms[index + connection[0]].get_name(true),
+                            main_atom
                         )
                         .to_string()]);
+                    } else if index == 0 && index == self.connections.len() - 1 {
+                        result.append(&mut vec![format!(
+                            "{} - {}",
+                            self.atoms[index + connection[0]].get_name(true),
+                            main_atom
+                        )])
                     } else if index == 0 {
-                        //BUG: if the first atom is also the last line is still present
                         result.append(&mut vec![format!(
                             "{} - {} - ",
-                            self.atoms[index + connection[0]].get_short(),
-                            self.atoms[index].get_short()
+                            self.atoms[index + connection[0]].get_name(true),
+                            main_atom
                         )
                         .to_string()]);
                     }
                     //TODO: last atom exception
+                }
+                2 => {
+                    result.append(&mut vec![format!(
+                        "
+                        {}    
+                        |
+                        {} - 
+                        |    
+                        {}    ",
+                        self.atoms[index + connection[0]].get_name(true),
+                        main_atom,
+                        self.atoms[index + connection[1]].get_name(true)
+                    )
+                    .to_string()]);
+                }
+                3 => {
+                    if index == 0 {
+                        result.append(&mut vec![format!(
+                            r"
+                                {}   
+                                |    
+                            {} - {} - 
+                                |   
+                                {}
+                            ",
+                            self.atoms[index + connection[0]].get_name(true),
+                            self.atoms[index + connection[1]].get_name(true),
+                            main_atom,
+                            self.atoms[index + connection[1]].get_name(true)
+                        )
+                        .to_string()]);
+                    }
                 }
                 _ => return vec![String::from("test2")],
             }
