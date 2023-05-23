@@ -21,6 +21,7 @@ impl World {
                 }
             }
         }
+        
         World {
             dimensions: (x, y, z),
             voxels: voxel_vec,
