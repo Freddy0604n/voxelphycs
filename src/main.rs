@@ -11,7 +11,5 @@ use world::World;
 
 fn main() {
     let world = World::new(10, 10, 10);
-    for voxel in world.voxels {
-        voxel.vxprint();
-    }
+    println!("{:#?}", world);
 }
